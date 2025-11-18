@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Referer {
+  id    Int     @id @default(autoincrement())
+  nome  String
+  email String  @unique
+  senha String
+
+  users User[]
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  nome            String
+  beneficiario    String?
+  cidade          String?
+  fone            String?
+  data_nascimento String?
+  pix             String?
+
+  referer_id Int?
+  referer    Referer? @relation(fields: [referer_id], references: [id])
+
+  @@index([referer_id])
+}

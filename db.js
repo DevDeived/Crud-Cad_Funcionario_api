@@ -1,26 +1,18 @@
-// api/db.js
-import mysql from "mysql2";
+// api/db.js  ← versão corrigida (named export)
+import { Pool } from "pg";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-export const db = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT || 3306,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
+const db = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
 });
 
-// Teste de conexão
-db.getConnection((err, connection) => {
-  if (err) {
-    console.error("Erro ao conectar ao MySQL:", err.message);
-  } else {
-    console.log("Conectado ao MySQL com sucesso!");
-    connection.release();
-  }
-});
+// mantém o nome "db" que seus controllers já conhecem
+export { db };
+
+// teste de conexão (opcional)
+db.connect()
+  .then(() => console.log("PostgreSQL conectado com sucesso!"))
+  .catch((err) => console.error("Erro na conexão:", err.message));
