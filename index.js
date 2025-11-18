@@ -29,17 +29,17 @@ app.get("/", (req, res) => {
 });
 
 // TESTE DE CONEXÃO POSTGRESQL (substitui o MySQL)
-const testDbConnection = async () => {
+const testDb = async () => {
   try {
-    await db.query("SELECT 1");
-    console.log("PostgreSQL conectado com sucesso!");
+    await prisma.$connect()
+    console.log("PostgreSQL + Prisma conectado com sucesso!")
   } catch (err) {
-    console.error("Erro ao conectar ao PostgreSQL:", err.message);
-    process.exit(1);
+    console.error("Erro ao conectar com Prisma:", err.message)
+    process.exit(1)
   }
-};
+}
 
-testDbConnection();
+testDb()
 
 // INICIA O SERVIDOR
 app.listen(PORT, () => {

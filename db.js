@@ -1,18 +1,8 @@
-// api/db.js  ← versão corrigida (named export)
-import { Pool } from "pg";
-import dotenv from "dotenv";
+// api/db.js  → Agora com Prisma (muito mais simples e poderoso)
+import { PrismaClient } from '@prisma/client'
 
-dotenv.config();
+const prisma = new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn'] : [],
+})
 
-const db = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-});
-
-// mantém o nome "db" que seus controllers já conhecem
-export { db };
-
-// teste de conexão (opcional)
-db.connect()
-  .then(() => console.log("PostgreSQL conectado com sucesso!"))
-  .catch((err) => console.error("Erro na conexão:", err.message));
+export default prisma
