@@ -1,48 +1,40 @@
 // api/controllers/referer.js
-import { db } from "../db.js";
+import prisma from "../db.js";
 
-export const getRefererByEmail = (req, res) => {
+// Buscar referer por email
+export const getRefererByEmail = async (req, res) => {
   const { email } = req.params;
 
-  if (!email) {
-    return res.status(400).json({ error: "Email é obrigatório" });
+  if (!email) return res.status(400).json({ error: "Email é obrigatório" });
+
+  try {
+    const referer = await prisma.referers.findUnique({
+      where: { email },
+    });
+
+    if (!referer) return res.status(404).json({ error: "Referer não encontrado" });
+
+    res.json(referer);
+  } catch (err) {
+    console.error("Erro ao buscar referer:", err);
+    res.status(500).json({ error: "Erro no servidor" });
   }
-
-  const q = "SELECT * FROM referers WHERE email = ?";
-
-  db.query(q, [email], (err, data) => {
-    if (err) {
-      console.error("Erro ao buscar referer:", err);
-      return res.status(500).json({ error: "Erro no servidor" });
-    }
-
-    if (data.length === 0) {
-      return res.status(404).json({ error: "Referer não encontrado" });
-    }
-
-    res.json(data[0]);
-  });
 };
 
-export const createReferer = (req, res) => {
+// Criar referer
+export const createReferer = async (req, res) => {
   const { nome, email, senha } = req.body;
 
-  if (!nome || !email || !senha) {
+  if (!nome || !email || !senha)
     return res.status(400).json({ error: "Todos os campos são obrigatórios" });
-  }
 
-  const q = "INSERT INTO referers (nome, email, senha) VALUES (?, ?, ?)";
-
-  db.query(q, [nome, email, senha], (err, result) => {
-    if (err) {
-      console.error("Erro ao cadastrar referer:", err);
-      return res.status(500).json({ error: "Erro ao cadastrar" });
-    }
-
-    res.json({
-      id: result.insertId,
-      nome,
-      email,
+  try {
+    const referer = await prisma.referers.create({
+      data: { nome, email, senha },
     });
-  });
+    res.json(referer);
+  } catch (err) {
+    console.error("Erro ao cadastrar referer:", err);
+    res.status(500).json({ error: "Erro ao cadastrar" });
+  }
 };

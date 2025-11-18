@@ -2,7 +2,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { db } from "./db.js";
+import prisma from "./db.js";
 
 import userRoutes from "./routes/users.js";
 import refererRoutes from "./routes/referers.js";
