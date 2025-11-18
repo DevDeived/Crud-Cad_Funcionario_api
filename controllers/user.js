@@ -1,10 +1,11 @@
 // api/controllers/user.js
-import prisma from "../db.js";
+import { db } from "../db.js";
 
 // Listar todos os usuários
 export const getUsers = async (req, res) => {
   try {
-    const users = await prisma.users.findMany({
+    const users = await db.user.findMany({
+      include: { referer: true }, // traz os dados do referer junto
       orderBy: { nome: "asc" },
     });
     res.json(users);
@@ -16,15 +17,23 @@ export const getUsers = async (req, res) => {
 
 // Criar usuário
 export const createUser = async (req, res) => {
-  const { nome, beneficiario, cidade, fone, data_nascimento, pix, referer_id } = req.body;
+  const { nome, beneficiario, cidade, fone, data_nascimento, pix, refererId } = req.body;
 
   if (!nome) return res.status(400).json({ error: "Nome é obrigatório" });
 
   try {
-    const user = await prisma.users.create({
-      data: { nome, beneficiario, cidade, fone, data_nascimento, pix, referer_id },
+    const user = await db.user.create({
+      data: {
+        nome,
+        beneficiario,
+        cidade,
+        fone,
+        data_nascimento,
+        pix,
+        refererId: refererId ? Number(refererId) : null, // ← campo correto
+      },
     });
-    res.json(user);
+    res.status(201).json(user);
   } catch (err) {
     console.error("Erro ao criar usuário:", err);
     res.status(500).json({ error: "Erro ao criar usuário" });
@@ -34,16 +43,22 @@ export const createUser = async (req, res) => {
 // Atualizar usuário
 export const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { nome, beneficiario, cidade, fone, data_nascimento, pix, referer_id } = req.body;
-
-  if (!id) return res.status(400).json({ error: "ID é obrigatório" });
+  const { nome, beneficiario, cidade, fone, data_nascimento, pix, refererId } = req.body;
 
   try {
-    await prisma.users.update({
+    const user = await db.user.update({
       where: { id: Number(id) },
-      data: { nome, beneficiario, cidade, fone, data_nascimento, pix, referer_id },
+      data: {
+        nome,
+        beneficiario,
+        cidade,
+        fone,
+        data_nascimento,
+        pix,
+        refererId: refererId ? Number(refererId) : null,
+      },
     });
-    res.json({ message: "Atualizado com sucesso" });
+    res.json(user);
   } catch (err) {
     console.error("Erro ao atualizar usuário:", err);
     res.status(500).json({ error: "Erro ao atualizar usuário" });
@@ -55,7 +70,7 @@ export const deleteUser = async (req, res) => {
   const { id } = req.params;
 
   try {
-    await prisma.users.delete({ where: { id: Number(id) } });
+    await db.user.delete({ where: { id: Number(id) } });
     res.json({ message: "Deletado com sucesso" });
   } catch (err) {
     console.error("Erro ao deletar usuário:", err);
@@ -68,8 +83,9 @@ export const getUsersByReferer = async (req, res) => {
   const { refererId } = req.params;
 
   try {
-    const users = await prisma.users.findMany({
-      where: { referer_id: Number(refererId) },
+    const users = await db.user.findMany({
+      where: { refererId: Number(refererId) },
+      include: { referer: true },
       orderBy: { nome: "asc" },
     });
     res.json(users);

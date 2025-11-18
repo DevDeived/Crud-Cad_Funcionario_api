@@ -1,5 +1,5 @@
 // api/controllers/referer.js
-import prisma from "../db.js";
+import { db } from "../db.js";   // ← agora usa { db } porque você exportou como named
 
 // Buscar referer por email
 export const getRefererByEmail = async (req, res) => {
@@ -8,8 +8,8 @@ export const getRefererByEmail = async (req, res) => {
   if (!email) return res.status(400).json({ error: "Email é obrigatório" });
 
   try {
-    const referer = await prisma.referers.findUnique({
-      where: { email },
+    const referer = await db.referer.findUnique({
+      where: { email }, // ← correto
     });
 
     if (!referer) return res.status(404).json({ error: "Referer não encontrado" });
@@ -29,10 +29,10 @@ export const createReferer = async (req, res) => {
     return res.status(400).json({ error: "Todos os campos são obrigatórios" });
 
   try {
-    const referer = await prisma.referers.create({
+    const referer = await db.referer.create({
       data: { nome, email, senha },
     });
-    res.json(referer);
+    res.status(201).json(referer);
   } catch (err) {
     console.error("Erro ao cadastrar referer:", err);
     res.status(500).json({ error: "Erro ao cadastrar" });
