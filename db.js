@@ -1,13 +1,23 @@
-// api/db.js → versão que aceita QUALQUER import (default ou named)
-import { PrismaClient } from '@prisma/client'
+// api/db.js
+import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient()
+let prisma;
 
-// Exporta das duas formas → nunca mais dá erro de import
-export const db = prisma
-export default prisma
+if (process.env.NODE_ENV === "production") {
+  // NO RENDER: uma única instância global
+  prisma = global.prisma || new PrismaClient();
+  if (!global.prisma) global.prisma = prisma;
+} else {
+  // Local: com hot reload
+  if (!global.prisma) {
+    global.prisma = new PrismaClient();
+  }
+  prisma = global.prisma;
+}
 
-// Conexão
-prisma.$connect()
-  .then(() => console.log("Prisma conectado com sucesso!"))
-  .catch(err => console.error("Erro no Prisma:", err))
+// Garante que a conexão fecha quando o servidor cai
+process.on("beforeExit", async () => {
+  await prisma?.$disconnect();
+});
+
+export default prisma;

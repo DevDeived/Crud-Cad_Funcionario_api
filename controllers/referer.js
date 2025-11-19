@@ -1,18 +1,19 @@
 // api/controllers/referer.js
-import { db } from "../db.js";   // ← agora usa { db } porque você exportou como named
+import prisma from "../db.js";
+import md5 from "md5";
 
-// Buscar referer por email
+// Buscar referer por email (LOGIN)
 export const getRefererByEmail = async (req, res) => {
   const { email } = req.params;
 
-  if (!email) return res.status(400).json({ error: "Email é obrigatório" });
-
   try {
-    const referer = await db.referer.findUnique({
-      where: { email }, // ← correto
+    const referer = await prisma.referer.findUnique({
+      where: { email },
     });
 
-    if (!referer) return res.status(404).json({ error: "Referer não encontrado" });
+    if (!referer) {
+      return res.status(404).json({ error: "Referer não encontrado" });
+    }
 
     res.json(referer);
   } catch (err) {
@@ -21,20 +22,34 @@ export const getRefererByEmail = async (req, res) => {
   }
 };
 
-// Criar referer
+// Criar referer (CADASTRO)
 export const createReferer = async (req, res) => {
   const { nome, email, senha } = req.body;
 
-  if (!nome || !email || !senha)
+  if (!nome || !email || !senha) {
     return res.status(400).json({ error: "Todos os campos são obrigatórios" });
+  }
 
   try {
-    const referer = await db.referer.create({
-      data: { nome, email, senha },
+    // Verifica se já existe
+    const existe = await prisma.referer.findUnique({ where: { email } });
+    if (existe) {
+      return res.status(400).json({ error: "Email já cadastrado" });
+    }
+
+    const senhaHash = md5(senha); // ← hash da senha
+
+    const novoReferer = await prisma.referer.create({
+      data: {
+        nome,
+        email,
+        senha: senhaHash,
+      },
     });
-    res.status(201).json(referer);
+
+    res.status(201).json(novoReferer);
   } catch (err) {
-    console.error("Erro ao cadastrar referer:", err);
-    res.status(500).json({ error: "Erro ao cadastrar" });
+    console.error("Erro ao criar referer:", err);
+    res.status(500).json({ error: "Erro ao cadastrar referer" });
   }
 };

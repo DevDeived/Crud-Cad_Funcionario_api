@@ -1,5 +1,5 @@
 // api/controllers/user.js
-import { db } from "../db.js";
+import prisma from "../db.js";
 
 // Listar todos os usuários
 export const getUsers = async (req, res) => {
