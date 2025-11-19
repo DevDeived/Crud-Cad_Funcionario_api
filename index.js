@@ -12,12 +12,10 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8800;
 
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-  })
-);
+app.use(cors({
+  origin: ["http://localhost:3000", "https://seu-frontend.onrender.com"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+}));
 
 app.use(express.json());
 
