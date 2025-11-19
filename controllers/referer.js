@@ -1,38 +1,40 @@
-// api/controllers/referer.js
 import prisma from "../db.js";
 import md5 from "md5";
 
 // BUSCAR REFERER POR EMAIL + VALIDAR SENHA (LOGIN)
 export const getRefererByEmail = async (req, res) => {
   const { email } = req.params;
-  const senhaEnviada = req.query.senha; // ← frontend manda ?senha=123456
+  const senhaHasheada = req.query.senha; // ← frontend manda md5(senha)
 
-  // Validação básica
-  if (!email || !senhaEnviada) {
+  if (!email || !senhaHasheada) {
     return res.status(400).json({ error: "Email e senha são obrigatórios" });
   }
 
   try {
     const referer = await prisma.referer.findUnique({
-      where: { email },
+      where: { email: email.toLowerCase().trim() },
     });
 
-    // Se não existir OU senha não bater → mesma mensagem (segurança)
-    if (!referer || referer.senha !== md5(senhaEnviada)) {
+    if (!referer) {
+      return res.status(401).json({ error: "Email ou senha incorretos" });
+    }
+
+    // Compara os dois hashes (ambos em md5)
+    if (referer.senha !== senhaHasheada) {
       return res.status(401).json({ error: "Email ou senha incorretos" });
     }
 
     // Remove a senha antes de enviar pro frontend
-    const { senha, ...refererSemSenha } = referer;
+    const { senha, ...dadosReferer } = referer;
+    res.json(dadosReferer);
 
-    res.json(refererSemSenha);
   } catch (err) {
     console.error("Erro no login:", err);
-    res.status(500).json({ error: "Erro interno do servidor" });
+    res.status(500).json({ error: "Erro no servidor" });
   }
 };
 
-// CRIAR REFERER (CADASTRO DE ADMIN)
+// CRIAR REFERER (CADASTRO) — continua igual
 export const createReferer = async (req, res) => {
   const { nome, email, senha } = req.body;
 
@@ -41,7 +43,6 @@ export const createReferer = async (req, res) => {
   }
 
   try {
-    // Verifica se já existe
     const existe = await prisma.referer.findUnique({ where: { email } });
     if (existe) {
       return res.status(400).json({ error: "Este email já está cadastrado" });
@@ -57,11 +58,10 @@ export const createReferer = async (req, res) => {
       },
     });
 
-    // Não retorna a senha
     const { senha: _, ...refererCriado } = novoReferer;
     res.status(201).json(refererCriado);
   } catch (err) {
     console.error("Erro ao cadastrar referer:", err);
-    res.status(500).json({ error: "Erro ao cadastrar. Tente novamente." });
+    res.status(500).json({ error: "Erro ao cadastrar" });
   }
 };
