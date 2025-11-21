@@ -1,5 +1,5 @@
 import express from "express";
-import { getRefererByEmail, createReferer, loginReferer } from "../controllers/referer.js";
+import { createReferer, loginReferer } from "../controllers/referer.js";
 
 const router = express.Router();
 
