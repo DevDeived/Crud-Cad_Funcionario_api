@@ -1,6 +1,6 @@
 // prisma/seed.js
-const { PrismaClient } = require('@prisma/client');
-const md5 = require('md5');
+import { PrismaClient } from '@prisma/client';
+import md5 from 'md5';
 
 const prisma = new PrismaClient();
 
@@ -11,10 +11,17 @@ async function main() {
     create: {
       nome: 'Deived Lichela',
       email: 'deivedlichela@gmail.com',
-      senha: md5('123456')
-    }
+      senha: md5('123456'),
+    },
   });
-  console.log('Admin criado!');
+  console.log('Admin Deived criado com sucesso!');
 }
 
-main().finally(() => prisma.$disconnect());
+main()
+  .catch((e) => {
+    console.error('Erro no seed:', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
