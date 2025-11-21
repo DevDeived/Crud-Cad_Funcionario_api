@@ -4,7 +4,7 @@ import prisma from "../db.js";
 // Listar todos os usuários
 export const getUsers = async (req, res) => {
   try {
-    const users = await db.user.findMany({
+    const users = await prisma.user.findMany({
       include: { referer: true }, // traz os dados do referer junto
       orderBy: { nome: "asc" },
     });
@@ -22,7 +22,7 @@ export const createUser = async (req, res) => {
   if (!nome) return res.status(400).json({ error: "Nome é obrigatório" });
 
   try {
-    const user = await db.user.create({
+    const user = await prisma.user.create({
       data: {
         nome,
         beneficiario,
@@ -46,7 +46,7 @@ export const updateUser = async (req, res) => {
   const { nome, beneficiario, cidade, fone, data_nascimento, pix, refererId } = req.body;
 
   try {
-    const user = await db.user.update({
+    const user = await prisma.user.update({
       where: { id: Number(id) },
       data: {
         nome,
@@ -70,7 +70,7 @@ export const deleteUser = async (req, res) => {
   const { id } = req.params;
 
   try {
-    await db.user.delete({ where: { id: Number(id) } });
+    await prisma.user.delete({ where: { id: Number(id) } });
     res.json({ message: "Deletado com sucesso" });
   } catch (err) {
     console.error("Erro ao deletar usuário:", err);
@@ -83,7 +83,7 @@ export const getUsersByReferer = async (req, res) => {
   const { refererId } = req.params;
 
   try {
-    const users = await db.user.findMany({
+    const users = await prisma.user.findMany({
       where: { refererId: Number(refererId) },
       include: { referer: true },
       orderBy: { nome: "asc" },
@@ -94,3 +94,4 @@ export const getUsersByReferer = async (req, res) => {
     res.status(500).json({ error: "Erro no servidor" });
   }
 };
+
