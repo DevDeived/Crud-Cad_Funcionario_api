@@ -2,11 +2,10 @@ import prisma from "../db.js";
 import md5 from "md5";
 
 // LOGIN
-export const getRefererByEmail = async (req, res) => {
-  const { email } = req.params;
-  const senhaHash = req.query.senha;
+export const loginReferer = async (req, res) => {
+  const { email, senha } = req.body;
 
-  if (!email || !senhaHash) {
+  if (!email || !senha) {
     return res.status(400).json({ error: "Email e senha são obrigatórios" });
   }
 
@@ -19,11 +18,17 @@ export const getRefererByEmail = async (req, res) => {
       return res.status(401).json({ error: "Email ou senha incorretos" });
     }
 
-    if (referer.senha !== senhaHash) {
-      return res.status(401).json({ error: "Email ou senha incorretos" });
-    }
+    const senhaHash = md5(senha);
 
-    const { senha, ...dadosReferer } = referer;
+const novoReferer = await prisma.referer.create({
+  data: {
+    nome,
+    email: email.toLowerCase().trim(),
+    senha: senhaHash,
+  },
+});
+
+    const { senha: _, ...dadosReferer } = referer;
     return res.json(dadosReferer);
 
   } catch (err) {
