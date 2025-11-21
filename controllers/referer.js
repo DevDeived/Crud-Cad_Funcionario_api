@@ -1,12 +1,12 @@
 import prisma from "../db.js";
 import md5 from "md5";
 
-// BUSCAR REFERER POR EMAIL + VALIDAR SENHA (LOGIN)
+// LOGIN
 export const getRefererByEmail = async (req, res) => {
   const { email } = req.params;
-  const senhaHasheada = req.query.senha; // ← frontend manda md5(senha)
+  const senhaHash = req.query.senha;
 
-  if (!email || !senhaHasheada) {
+  if (!email || !senhaHash) {
     return res.status(400).json({ error: "Email e senha são obrigatórios" });
   }
 
@@ -19,22 +19,20 @@ export const getRefererByEmail = async (req, res) => {
       return res.status(401).json({ error: "Email ou senha incorretos" });
     }
 
-    // Compara os dois hashes (ambos em md5)
-    if (referer.senha !== senhaHasheada) {
+    if (referer.senha !== senhaHash) {
       return res.status(401).json({ error: "Email ou senha incorretos" });
     }
 
-    // Remove a senha antes de enviar pro frontend
     const { senha, ...dadosReferer } = referer;
-    res.json(dadosReferer);
+    return res.json(dadosReferer);
 
   } catch (err) {
     console.error("Erro no login:", err);
-    res.status(500).json({ error: "Erro no servidor" });
+    return res.status(500).json({ error: "Erro no servidor" });
   }
 };
 
-// CRIAR REFERER (CADASTRO) — continua igual
+// CADASTRO
 export const createReferer = async (req, res) => {
   const { nome, email, senha } = req.body;
 
@@ -43,9 +41,12 @@ export const createReferer = async (req, res) => {
   }
 
   try {
-    const existe = await prisma.referer.findUnique({ where: { email } });
-    if (existe) {
-      return res.status(400).json({ error: "Este email já está cadastrado" });
+    const jaExiste = await prisma.referer.findUnique({
+      where: { email: email.toLowerCase().trim() },
+    });
+
+    if (jaExiste) {
+      return res.status(400).json({ error: "Email já cadastrado" });
     }
 
     const senhaHash = md5(senha);
@@ -53,15 +54,16 @@ export const createReferer = async (req, res) => {
     const novoReferer = await prisma.referer.create({
       data: {
         nome,
-        email,
+        email: email.toLowerCase().trim(),
         senha: senhaHash,
       },
     });
 
-    const { senha: _, ...refererCriado } = novoReferer;
-    res.status(201).json(refererCriado);
+    const { senha: _, ...dadosCriados } = novoReferer;
+    return res.status(201).json(dadosCriados);
+
   } catch (err) {
-    console.error("Erro ao cadastrar referer:", err);
-    res.status(500).json({ error: "Erro ao cadastrar" });
+    console.error("Erro ao cadastrar:", err);
+    return res.status(500).json({ error: "Erro ao cadastrar" });
   }
 };

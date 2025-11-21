@@ -1,4 +1,3 @@
-// api/routes/referers.js
 import express from "express";
 import { getRefererByEmail, createReferer } from "../controllers/referer.js";
 
