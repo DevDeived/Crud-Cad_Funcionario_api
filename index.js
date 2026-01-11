@@ -31,19 +31,6 @@ app.get("/", (req, res) => {
   res.json({ message: "API rodando na Render!" });
 });
 
-// TESTE DE CONEXÃO COM POSTGRESQL + PRISMA
-const testDb = async () => {
-  try {
-    await prisma.$connect();
-    console.log("PostgreSQL + Prisma conectado com sucesso!");
-  } catch (err) {
-    console.error("Erro ao conectar com Prisma:", err.message);
-    process.exit(1);
-  }
-};
-
-testDb();
-
 // INICIA O SERVIDOR
 app.listen(PORT, () => {
   console.log(`Backend rodando na porta ${PORT}`);
