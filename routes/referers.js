@@ -44,8 +44,6 @@ router.post("/login", async (req, res) => {
       where: { email: email.toLowerCase().trim() },
     });
 
-    // AQUI ERA O ERRO: você estava fazendo md5(senha) de novo!
-    // Agora compara a senha PURA com o hash que já está no banco
     if (!referer || referer.senha !== md5(senha)) {
       return res.status(401).json({ error: "Email ou senha incorretos" });
     }
